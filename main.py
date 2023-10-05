@@ -14,7 +14,7 @@ stark_field = StarkField()
 # 	print(stark_field.primitive_nth_root_of_unity(1 << i))
 
 ######################################################################
-######## Polynomial tests
+######## Univariate Polynomial tests
 ######################################################################
 assert Polynomial([]).degree() == -1
 assert Polynomial([
@@ -69,3 +69,24 @@ assert(q == p2)
 p2_cube = (p2^3)
 p2_cube_coeffs = [27,108,144,64]
 assert(list(map(lambda x: x.value, p2_cube.coefficients)) == p2_cube_coeffs)
+
+p2_cube_zerofier = Polynomial.zerofier(p2_cube.coefficients)
+
+zerofier_evaluated_1 = p2_cube_zerofier.evaluate_domain(p2_cube.coefficients)
+for x in zerofier_evaluated_1: assert(x == stark_field.zero())
+zerofier_evaluated_2 = (p2_cube_zerofier * p3).evaluate_domain(p2_cube.coefficients)
+for x in zerofier_evaluated_2: assert(x == stark_field.zero())
+
+p2_cube_scaled_by_2 = p2_cube.scale(FieldElement(2, stark_field))
+assert(list(map(lambda x: x.value, p2_cube_scaled_by_2.coefficients)) == [27,216,576,512])
+
+stark_one = stark_field.one()
+stark_two = stark_one + stark_one
+stark_four = stark_two + stark_two
+stark_eight = stark_four + stark_four
+assert(Polynomial.test_colinearity([
+	[-stark_one,-stark_two], 
+	[stark_one,stark_two], 
+	[stark_two,stark_four],
+	[stark_four, stark_eight],
+]))

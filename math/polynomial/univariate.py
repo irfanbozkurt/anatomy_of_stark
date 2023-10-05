@@ -35,6 +35,53 @@ class Polynomial:
 			r -= Polynomial([zero] * shift + [c]) * denom
 
 		return Polynomial(q_coeff), r
+
+	# O(n^2) evaluation
+	def evaluate( self, point ):
+		xi = point.field.one()
+		value = point.field.zero()
+		for c in self.coefficients:
+			value += c * xi
+			xi *= point
+		return value
+
+	def evaluate_domain( self, domain ):
+		return [self.evaluate(d) for d in domain]
+
+	# O(n^2) Lagrange
+	def interpolate_domain( domain, values ):
+		assert(len(domain) == len(values)), "number of elements in domain does not match number of values -- cannot interpolate"
+		assert(len(domain) > 0), "cannot interpolate between zero points"
+		field = domain[0].field
+		x = Polynomial([field.zero(), field.one()])
+		acc = Polynomial([])
+		for i in range(len(domain)):
+			prod = Polynomial([values[i]])
+			for j in range(len(domain)):
+				if j == i: continue
+				prod *= (x - Polynomial([domain[j]])) * Polynomial([(domain[i] - domain[j]).inv()])
+			acc += prod
+		return acc
+
+	# Z_D(x) = (x-d_1)*(x-d_2)*...
+	def zerofier(domain):
+		field = domain[0].field
+		x = Polynomial([field.zero(), field.one()])
+		acc = Polynomial([field.one()])
+		for d in domain: acc *= x - Polynomial([d])
+		return acc
+
+	def scale(self, factor):
+		return Polynomial(
+			[(factor^i) * self.coefficients[i] for i in range(len(self.coefficients))]
+		)
+
+	# Do given points form a perfect line?
+	def test_colinearity(points):
+		return Polynomial.interpolate_domain(
+			[p[0] for p in points],
+			[p[1] for p in points]
+		).degree() <= 1
 	
 	def is_zero(self): return self.degree() == -1
 	@staticmethod
@@ -99,31 +146,4 @@ class Polynomial:
 		for i in reversed(range(len(bin(exp)[2:]))):
 			acc *= acc
 			if (1 << i) & exp != 0: acc *= self
-		return acc
-
-	# O(n^2) evaluation
-	def evaluate( self, point ):
-		xi = point.field.one()
-		value = point.field.zero()
-		for c in self.coefficients:
-			value += c * xi
-			xi *= point
-		return value
-
-	def evaluate_domain( self, domain ):
-		return [self.evaluate(d) for d in domain]
-
-	# O(n^2) Lagrange
-	def interpolate_domain( domain, values ):
-		assert(len(domain) == len(values)), "number of elements in domain does not match number of values -- cannot interpolate"
-		assert(len(domain) > 0), "cannot interpolate between zero points"
-		field = domain[0].field
-		x = Polynomial([field.zero(), field.one()])
-		acc = Polynomial([])
-		for i in range(len(domain)):
-			prod = Polynomial([values[i]])
-			for j in range(len(domain)):
-				if j == i: continue
-				prod *= (x - Polynomial([domain[j]])) * Polynomial([(domain[i] - domain[j]).inverse()])
-			acc += prod
 		return acc

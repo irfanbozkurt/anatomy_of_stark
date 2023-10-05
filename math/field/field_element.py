@@ -24,10 +24,7 @@ class FieldElement:
 
 		val = FieldElement(self.value, self.field)
 		for i in reversed(range(len(bin(exp)[2:]))):
-			acc = acc * acc
-			if (1 << i) & exp != 0: acc = acc * val
+			acc *= acc
+			if (1 << i) & exp != 0: acc *= val
 
 		return acc
-
-# def test_exp():
-# 	elem = FieldElement(1, )
